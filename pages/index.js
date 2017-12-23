@@ -12,6 +12,10 @@ export default class Index extends Component {
     currentTicker: ['bitcoin', 0]
   }
 
+  _resetGraphData() {
+    this.setState({ cmcData: null, coindarData: null })
+  }
+
   _getData = async () => {
     const coindarData = await coindar('btc')
     const chartResponse = await getCharts(this.state.currentTicker[0])
@@ -52,11 +56,6 @@ export default class Index extends Component {
     this._getData()
   }
 
-  componentDidUpdate() {
-    console.log(this.state.currentTicker)
-    this._getData()
-  }
-
   render() {
     const { coindarData, cmcData, listOfTickers }  = this.state
 
@@ -66,9 +65,13 @@ export default class Index extends Component {
         {listOfTickers ?
           <select
             value={this.state.currentTicker}
-            onChange={(e) => this.setState({
-              currentTicker: e.target.value.split(',')
-            })}
+            onChange={(e) => {
+              this.setState({
+                currentTicker: e.target.value.split(','),
+              })
+              this._resetGraphData()
+              this._getData()
+            }}
           >
             {listOfTickers.map((ticker, i) => (
               <option
