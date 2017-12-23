@@ -1,20 +1,24 @@
 import React, { Component } from 'react'
 import { Line } from 'react-chartjs-2';
 import coindar from '../services/coindar'
-import { getCharts } from '../services/coinmarketcap';
+import { getCharts, getListOfTickers } from '../services/coinmarketcap';
 import btcData from '../download.json'
 import transformData from '../utils/transformData'
 
 export default class Index extends Component {
   state = {
     coindarData: null,
-    cmcData: null
+    cmcData: null,
+    listOfTickers: null,
   }
 
   _getData = async () => {
     const coindarData = await coindar('btc')
-    const cmcResponse = await getCharts('bitcoin')
-    const transformed = transformData.prices(cmcResponse)
+    const chartResponse = await getCharts('bitcoin')
+    const tickersResponse = await getListOfTickers()
+  
+
+    const transformed = transformData.prices(chartResponse)
     const cmcData = {
       labels: transformed.x,
       datasets: [
