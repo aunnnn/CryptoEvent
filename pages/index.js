@@ -15,7 +15,7 @@ export default class Index extends Component {
   _getData = async () => {
     const coindarData = await coindar('btc')
     const chartResponse = await getCharts('bitcoin')
-    const tickersResponse = await getListOfTickers()
+    const listOfTickers = await getListOfTickers()
   
 
     const transformed = transformData.prices(chartResponse)
@@ -53,7 +53,7 @@ export default class Index extends Component {
   }
 
   render() {
-    const { coindarData, cmcData }  = this.state
+    const { coindarData, cmcData, listOfTickers }  = this.state
 
     if (!coindarData || !cmcData || !listOfTickers) {
       return <div>Loading..</div>
