@@ -2,7 +2,7 @@ import fetch from 'isomorphic-fetch';
 import moment from 'moment';
 
 
-const main = async (name='btc') => {
+const main = async (name) => {
   const res = await fetch(`https://gifebeta.com/crypto/coindar?name=${name}`)
   const json = await res.json()  
   const events = json.result.map(d => {

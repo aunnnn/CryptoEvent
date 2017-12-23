@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import { Line } from 'react-chartjs-2';
 import coindar from '../services/coindar'
 import { getCharts, getListOfTickers } from '../services/coinmarketcap';
-import btcData from '../download.json'
 import transformData from '../utils/transformData'
 
 export default class Index extends Component {
@@ -10,11 +9,20 @@ export default class Index extends Component {
     coindarData: null,
     cmcData: null,
     listOfTickers: null,
+    currentTicker: ['bitcoin', 0, 'BTC'],
   }
 
-  _getData = async () => {
-    const coindarData = await coindar('btc')
-    const chartResponse = await getCharts('bitcoin')
+  _resetGraphData() {
+    this.setState({ cmcData: null, coindarData: null })
+  }
+
+  _getData = async (data) => {
+
+    const coinSymbol = data[2]
+    const coinName = data[0]
+
+    const coindarData = await coindar(coinSymbol)
+    const chartResponse = await getCharts(coinName)
     const listOfTickers = await getListOfTickers()
 
     const transformed = transformData.prices(chartResponse)
@@ -83,27 +91,47 @@ export default class Index extends Component {
   }
 
   componentDidMount() {
-    this._getData()
+    this._getData(this.state.currentTicker)
   }
 
   render() {
     const { coindarData, cmcData, listOfTickers }  = this.state
-
-    if (!coindarData || !cmcData || !listOfTickers) {
-      return <div>Loading..</div>
-    }
-
     return (
       <div>
         <h1>Test API Page</h1>
-        <Line data={cmcData} />
+
+        {listOfTickers ?
+          <select
+            value={this.state.currentTicker}
+            onChange={(e) => {
+              this.setState({
+                currentTicker: e.target.value.split(','),
+              })
+              this._resetGraphData()
+              this._getData(e.target.value.split(','))
+            }}
+          >
+            {listOfTickers.map((ticker, i) => (
+              <option
+                value={`${ticker.id},${i},${ticker.symbol}`}
+                key={ticker.id}
+              >
+                {ticker.name} ({ticker.symbol})
+              </option>
+            ))}
+          </select> : <div>Loading Ticker List..</div>
+        }
+        {cmcData && coindarData ?
+          <Line data={cmcData} /> : <div>Loading Graph..</div>
+        }
+
         <div>
           {
-            coindarData.map((d, i) => {
+            coindarData && coindarData.map((d, i) => {
               return (
                 <div key={`d-${i}`}>
                   <div>
-                    <h4>{d.caption}
+                    <h4>{d.caption} ({d.coin_name})
                       <em><span>  - {d.start_date.format('DD MMM YYYY')}</span></em>
                     </h4>
                   </div>

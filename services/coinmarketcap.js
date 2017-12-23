@@ -1,7 +1,7 @@
 import fetch from 'isomorphic-fetch'
 
 export const getListOfTickers = async () => {
-  const res = await fetch('https://api.coinmarketcap.com/v1/ticker/?limit=100')
+  const res = await fetch('https://api.coinmarketcap.com/v1/ticker/?limit=300')
   const json = await res.json()
   return json
 }
