@@ -3,13 +3,15 @@ import { Line } from 'react-chartjs-2';
 import coindar from '../services/coindar'
 import { getCharts, getListOfTickers } from '../services/coinmarketcap';
 import transformData from '../utils/transformData'
+import TickerDetails from '../components/TickerDetails'
+
 
 export default class Index extends Component {
   state = {
     coindarData: null,
     cmcData: null,
     listOfTickers: null,
-    currentTicker: ['bitcoin', 0]
+    currentTickerIndex: 0
   }
 
   _resetGraphData() {
@@ -17,10 +19,11 @@ export default class Index extends Component {
   }
 
   _getData = async () => {
-    const coindarData = await coindar('btc')
-    const chartResponse = await getCharts(this.state.currentTicker[0])
     const listOfTickers = await getListOfTickers()
-    
+    this.setState({ listOfTickers })
+
+    const coindarData = await coindar('btc')
+    const chartResponse = await getCharts(listOfTickers[this.state.currentTickerIndex].id)
 
     const transformed = transformData.prices(chartResponse)
     const cmcData = {
@@ -49,7 +52,7 @@ export default class Index extends Component {
         }
       ]
     }
-    this.setState({ coindarData, cmcData, listOfTickers })
+    this.setState({ coindarData, cmcData })
   }
 
   componentDidMount() {
@@ -57,31 +60,36 @@ export default class Index extends Component {
   }
 
   render() {
-    const { coindarData, cmcData, listOfTickers }  = this.state
-
+    const { coindarData, cmcData, listOfTickers, currentTickerIndex }  = this.state
     return (
       <div>
         <h1>Test API Page</h1>
         {listOfTickers ?
           <select
-            value={this.state.currentTicker}
+            value={currentTickerIndex}
             onChange={(e) => {
               this.setState({
-                currentTicker: e.target.value.split(','),
+                currentTickerIndex: parseInt(e.target.value),
               })
               this._resetGraphData()
               this._getData()
             }}
+            style={{ marginBottom: 10 }}
           >
             {listOfTickers.map((ticker, i) => (
               <option
-                value={`${ticker.id},${i}`}
+                value={i}
                 key={ticker.id}
               >
                 {ticker.name}
               </option>
             ))}
           </select> : <div>Loading Ticker List..</div>
+        }
+        {listOfTickers && 
+          <TickerDetails
+            ticker={listOfTickers[currentTickerIndex]}
+          />
         }
         {cmcData && coindarData ?
           <Line data={cmcData} /> : <div>Loading Graph..</div>
