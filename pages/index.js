@@ -45,7 +45,7 @@ export default class Index extends Component {
         }
       ]
     }
-    this.setState({ coindarData, cmcData })
+    this.setState({ coindarData, cmcData, listOfTickers })
   }
 
   componentDidMount() {
@@ -55,7 +55,7 @@ export default class Index extends Component {
   render() {
     const { coindarData, cmcData }  = this.state
 
-    if (!coindarData || !cmcData) {
+    if (!coindarData || !cmcData || !listOfTickers) {
       return <div>Loading..</div>
     }
 
