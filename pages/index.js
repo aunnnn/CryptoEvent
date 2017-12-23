@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import { Line } from 'react-chartjs-2';
 import coindar from '../services/coindar'
 import { getCharts, getListOfTickers } from '../services/coinmarketcap';
-import btcData from '../download.json'
 import transformData from '../utils/transformData'
 
 export default class Index extends Component {
@@ -10,13 +9,14 @@ export default class Index extends Component {
     coindarData: null,
     cmcData: null,
     listOfTickers: null,
+    currentTicker: ['bitcoin', 0]
   }
 
   _getData = async () => {
     const coindarData = await coindar('btc')
-    const chartResponse = await getCharts('bitcoin')
+    const chartResponse = await getCharts(this.state.currentTicker[0])
     const listOfTickers = await getListOfTickers()
-  
+    
 
     const transformed = transformData.prices(chartResponse)
     const cmcData = {
@@ -52,17 +52,37 @@ export default class Index extends Component {
     this._getData()
   }
 
+  componentDidUpdate() {
+    console.log(this.state.currentTicker)
+    this._getData()
+  }
+
   render() {
     const { coindarData, cmcData, listOfTickers }  = this.state
-
-    if (!coindarData || !cmcData || !listOfTickers) {
-      return <div>Loading..</div>
-    }
 
     return (
       <div>
         <h1>Test API Page</h1>
-        <Line data={cmcData} />
+        {listOfTickers ?
+          <select
+            value={this.state.currentTicker}
+            onChange={(e) => this.setState({
+              currentTicker: e.target.value.split(',')
+            })}
+          >
+            {listOfTickers.map((ticker, i) => (
+              <option
+                value={`${ticker.id},${i}`}
+                key={ticker.id}
+              >
+                {ticker.name}
+              </option>
+            ))}
+          </select> : <div>Loading Ticker List..</div>
+        }
+        {cmcData && coindarData ?
+          <Line data={cmcData} /> : <div>Loading Graph..</div>
+        }
       </div>
     )
   }
