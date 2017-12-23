@@ -11,7 +11,6 @@ class TestAPI extends Component {
   getData = async () => {
     const cd_data = await coindar('btc')
     const cmc_data = await coinmarketcap()
-    console.log(cmc_data)
     this.setState({
       data: cd_data,
     })

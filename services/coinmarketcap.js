@@ -6,8 +6,8 @@ export const getListOfTickers = async () => {
   return json
 }
 
-export const getCharts = async (id) => {
-  const res = await fetch(`https://graphs.coinmarketcap.com/currencies/${id}/`)
-  const price_usd = (await res.json()).price_usd
-  return price_usd
+export const getCharts = async (id='bitcoin') => {
+  const res = await fetch(`https://api.platonos.com/cryptoChart/${id}`)
+  const json = (await res.json())
+  return json
 }
