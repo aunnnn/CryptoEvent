@@ -7,7 +7,6 @@ export const getListOfTickers = async () => {
 }
 
 export const getCharts = async (id='bitcoin') => {
-  console.log(id)
   const res = await fetch(`https://api.platonos.com/cryptoChart/${id}`)
   const json = (await res.json())
   return json

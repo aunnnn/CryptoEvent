@@ -18,14 +18,37 @@ export default class Index extends Component {
     this.setState({ cmcData: null, coindarData: null })
   }
 
-  _getData = async () => {
-    const listOfTickers = await getListOfTickers()
-    this.setState({ listOfTickers })
+  _getData = async (currentTickerIndex) => {
+    let listOfTickers;
+    if (!this.state.listOfTickers) {
+      listOfTickers = await getListOfTickers()
+      this.setState({ listOfTickers })
+    } else {
+      listOfTickers = this.state.listOfTickers
+    }
 
-    const coindarData = await coindar('btc')
-    const chartResponse = await getCharts(listOfTickers[this.state.currentTickerIndex].id)
+    const coindarData = await coindar(listOfTickers[currentTickerIndex].symbol)
+    const chartResponse = await getCharts(listOfTickers[currentTickerIndex].id)
 
     const transformed = transformData.prices(chartResponse)
+
+    const coindarDict = {};
+    coindarData.forEach(d => {
+      coindarDict[d.start_date.format('DD MMM YYYY')] = d
+    })
+
+    const highest = Math.max(...transformed.y)*0.75
+
+    let count = 0
+    const dataYForEvents = transformed.x.map((d) => {
+      const event = coindarDict[d]
+      if (!event) { return 0 }
+      count++
+      return highest
+    })    
+
+    // alert('Detect: ' + count + 'out of ' + coindarData.length)
+
     const cmcData = {
       labels: transformed.x,
       datasets: [
@@ -49,21 +72,40 @@ export default class Index extends Component {
           pointRadius: 1,
           pointHitRadius: 10,
           data: transformed.y
+        },
+        {
+          label: 'Events',
+          fill: false,
+          lineTension: 0.05,
+          backgroundColor: 'rgba(255,0,0,0.7)',
+          borderColor: 'rgba(255,0,0,1)',
+          pointBorderColor: 'rgba(255,0,0,1)',
+          pointBackgroundColor: '#fff',
+          pointBorderWidth: 0.5,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: 'rgba(75,192,192,1)',
+          pointHoverBorderColor: 'rgba(220,220,220,1)',
+          pointHoverBorderWidth: 2,
+          pointRadius: 1,
+          pointHitRadius: 10,
+          data: dataYForEvents,
         }
-      ]
+      ],      
     }
     this.setState({ coindarData, cmcData })
   }
 
   componentDidMount() {
-    this._getData()
+    this._getData(this.state.currentTickerIndex)
   }
 
   render() {
     const { coindarData, cmcData, listOfTickers, currentTickerIndex }  = this.state
+
     return (
       <div>
         <h1>Test API Page</h1>
+
         {listOfTickers ?
           <select
             value={currentTickerIndex}
@@ -72,7 +114,7 @@ export default class Index extends Component {
                 currentTickerIndex: parseInt(e.target.value),
               })
               this._resetGraphData()
-              this._getData()
+              this._getData(e.target.value)
             }}
             style={{ marginBottom: 10 }}
           >
@@ -81,7 +123,7 @@ export default class Index extends Component {
                 value={i}
                 key={ticker.id}
               >
-                {ticker.name}
+                {ticker.name} ({ticker.symbol})
               </option>
             ))}
           </select> : <div>Loading Ticker List..</div>
@@ -94,6 +136,22 @@ export default class Index extends Component {
         {cmcData && coindarData ?
           <Line data={cmcData} /> : <div>Loading Graph..</div>
         }
+
+        <div>
+          {
+            coindarData && coindarData.map((d, i) => {
+              return (
+                <div key={`d-${i}`}>
+                  <div>
+                    <h4>{d.caption} ({d.coin_name})
+                      <em><span>  - {d.start_date.format('DD MMM YYYY')}</span></em>
+                    </h4>
+                  </div>
+                </div>
+              )
+            })
+          }
+        </div>
       </div>
     )
   }
