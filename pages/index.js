@@ -18,12 +18,17 @@ export default class Index extends Component {
     this.setState({ cmcData: null, coindarData: null })
   }
 
-  _getData = async () => {
-    const listOfTickers = await getListOfTickers()
-    this.setState({ listOfTickers })
+  _getData = async (currentTickerIndex) => {
+    let listOfTickers;
+    if (!this.state.listOfTickers) {
+      listOfTickers = await getListOfTickers()
+      this.setState({ listOfTickers })
+    } else {
+      listOfTickers = this.state.listOfTickers
+    }
 
-    const coindarData = await coindar(listOfTickers[this.state.currentTickerIndex].symbol)
-    const chartResponse = await getCharts(listOfTickers[this.state.currentTickerIndex].id)
+    const coindarData = await coindar(listOfTickers[currentTickerIndex].symbol)
+    const chartResponse = await getCharts(listOfTickers[currentTickerIndex].id)
 
     const transformed = transformData.prices(chartResponse)
 
@@ -91,7 +96,7 @@ export default class Index extends Component {
   }
 
   componentDidMount() {
-    this._getData(this.state.currentTicker)
+    this._getData(this.state.currentTickerIndex)
   }
 
   render() {
@@ -109,7 +114,7 @@ export default class Index extends Component {
                 currentTickerIndex: parseInt(e.target.value),
               })
               this._resetGraphData()
-              this._getData(e.target.value.split(','))
+              this._getData(e.target.value)
             }}
             style={{ marginBottom: 10 }}
           >
